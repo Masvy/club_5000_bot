@@ -8,7 +8,6 @@ from config_data.config import ConfigBot, load_config
 logger = logging.getLogger(__name__)
 
 
-
 async def main():
     '''
     Функция конфигурирования и запуска бота
