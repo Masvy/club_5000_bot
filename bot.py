@@ -32,7 +32,7 @@ async def main():
 
     config: Config = load_config()
 
-    redis: Redis = Redis(host='localgost')
+    redis: Redis = Redis(host='localhost')
 
     storage: RedisStorage = RedisStorage(redis=redis)
 
