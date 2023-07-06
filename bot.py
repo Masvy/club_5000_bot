@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage, Redis
 from config_data.config import Config, load_config
 from handlers import other_handlers, user_handlers
 
@@ -15,7 +16,10 @@ async def main():
 
     Конфигурировал логирование
     Вывел в консоль информацию о начале запуска бота
-    Загруpbk конфиг в переменную config
+    Загрузил конфиг в переменную config
+    Инициализировал Redis
+    Инициализировал хранилище
+    Создал объекты бота и диспетчера
     Регистриуем роутеры в диспетчере
     Пропускаем накопившиеся апдейты и запускаем polling
     '''
@@ -27,9 +31,14 @@ async def main():
     logger.info('Starting bot')
 
     config: Config = load_config()
+
+    redis: Redis = Redis(host='localgost')
+
+    storage: RedisStorage = RedisStorage(redis=redis)
+
     bot: Bot = Bot(token=config.tg_bot.token,
                    parse_mode='HTML')
-    dp: Dispatcher = Dispatcher()
+    dp: Dispatcher = Dispatcher(storage=storage)
 
     dp.include_router(user_handlers.router)
     dp.include_router(other_handlers.router)
