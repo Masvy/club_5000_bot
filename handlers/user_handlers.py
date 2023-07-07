@@ -1,10 +1,11 @@
 from aiogram import Router
-from aiogram.filters import CommandStart, StateFilter
+from aiogram.filters import CommandStart, StateFilter, Text
 from aiogram.types import Message
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 from lexicon.user_lexicon import USER_LEXICON
 from states.user_states import Verification
+from keyboards.reply_user import menu_kb
 
 # Инициализировал роутер для данного модуля
 router: Router = Router()
@@ -42,4 +43,13 @@ async def process_name_sent(message: Message, state: FSMContext):
 async def process_city_sent(message: Message, state: FSMContext):
     await state.update_data(city=message.text)
     await message.answer(text=USER_LEXICON['FSM_finish'])
+    await message.answer_photo(text=USER_LEXICON['greetings'],
+                               reply_markup=menu_kb)
     await state.clear()
+
+
+# Этот хэндлер отвечает на нажатие кнопки 'Правила'
+@router.message(Text(text='Правила'))
+async def show_rules(message: Message):
+    await message.answer(text=USER_LEXICON['rules'])
+    await message.answer_photo(text=USER_LEXICON['greetings'])
