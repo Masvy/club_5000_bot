@@ -1,6 +1,6 @@
 from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter, Text
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 from lexicon.user_lexicon import USER_LEXICON
@@ -43,14 +43,30 @@ async def process_name_sent(message: Message, state: FSMContext):
 # И выключает FSM
 @router.message(StateFilter(Verification.city))
 async def process_city_sent(message: Message, state: FSMContext):
+    photo = FSInputFile('photo/badge_5000_social.jpg')
     await state.update_data(city=message.text)
     await message.answer(text=USER_LEXICON['FSM_finish'])
-    await message.answer(text=USER_LEXICON['greetings'], reply_markup=menu_kb)
+    await message.answer_photo(photo=photo, caption=USER_LEXICON['greetings'],
+                               reply_markup=menu_kb)
     await state.clear()
 
 
 # Этот хэндлер отвечает на нажатие кнопки 'Правила'
 @router.message(Text(text='Правила'))
 async def show_rules(message: Message):
+    photo = FSInputFile('photo/badge_5000_social.jpg')
     await message.answer(text=USER_LEXICON['rules'])
-    await message.answer_photo(text=USER_LEXICON['greetings'])
+    await message.answer_photo(photo=photo, caption=USER_LEXICON['greetings'])
+
+
+# Этот хэндлер отвечает на нажатие кнопки 'Вступить'
+@router.message(Text(text='Вступить'))
+async def join_func(message: Message):
+    await message.answer(text=USER_LEXICON['join'])
+    await message.answer(text=USER_LEXICON['dues'])
+
+
+# Этот хэндлер отвечает на нажатие кнопки 'Сборы'
+@router.message(Text(text='Сборы'))
+async def dues_func(message: Message):
+    await message.answer(text=USER_LEXICON['dues'])
