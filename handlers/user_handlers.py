@@ -1,12 +1,14 @@
 from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter, Text
-from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove
+from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove, CallbackQuery
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
-from lexicon.user_lexicon import USER_LEXICON
+
+from lexicon.user_lexicon import USER_LEXICON, DUES_LEXICON
 from states.user_states import Verification
 from keyboards.reply_user import menu_kb, phone_num_kb
 from db.users import add_user_id, add_name, add_city, read_name
+from keyboards.inline_user import dueses_kb, send_kb
 
 # Инициализировал роутер для данного модуля
 router: Router = Router()
@@ -79,10 +81,29 @@ async def show_rules(message: Message):
 @router.message(Text(text='Вступить'))
 async def join_func(message: Message):
     await message.answer(text=USER_LEXICON['join'])
-    await message.answer(text=USER_LEXICON['dues'])
+    await message.answer(text=DUES_LEXICON['dueses_options'],
+                         reply_markup=dueses_kb)
 
 
 # Этот хэндлер отвечает на нажатие кнопки 'Сборы'
 @router.message(Text(text='Сборы'))
-async def dues_func(message: Message):
-    await message.answer(text=USER_LEXICON['dues'])
+async def choice_of_dues(message: Message):
+    await message.answer(text=DUES_LEXICON['dueses_options'],
+                         reply_markup=dueses_kb)
+
+
+@router.callback_query(Text(text=['dues_but_pressed']))
+async def dues_1_press(callback: CallbackQuery):
+    await callback.message.answer(text='Название\n\nОписание',
+                                  reply_markup=send_kb)
+
+
+@router.callback_query(Text(text=['send_dues_but_pressed']))
+async def send_dues_press(callback: CallbackQuery):
+    await callback.message.answer(text=DUES_LEXICON['input_dues'])
+
+
+@router.callback_query(Text(text=['send_cancel_dues_but_pressed']))
+async def send_cancel_dues_press(callback: CallbackQuery):
+    await callback.message.edit_text(text=DUES_LEXICON['dueses_options'],
+                                     reply_markup=dueses_kb)
