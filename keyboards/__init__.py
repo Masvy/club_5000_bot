@@ -1,1 +1,1 @@
-from keyboards import reply_user
+from keyboards import reply_user, inline_user
