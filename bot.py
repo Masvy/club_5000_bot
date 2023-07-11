@@ -3,11 +3,10 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage, Redis
-from sqlalchemy.engine import URL
 from config_data.config import Config, load_config
-from config_data.config_db import ConfigDb, load_config_db
 from handlers import other_handlers, user_handlers
-from db import BaseModel, create_async_engine, get_session_maker, proceed_schemas
+from db import BaseModel, proceed_schemas
+from loader import session_maker, async_engine
 
 # Инициализировал логгер
 logger = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ async def main():
     logger.info('Starting bot')
 
     config: Config = load_config()
-    config2: ConfigDb = load_config_db()
 
     redis: Redis = Redis(host='localhost')
 
@@ -44,24 +42,11 @@ async def main():
                    parse_mode='HTML')
     dp: Dispatcher = Dispatcher(storage=storage)
 
-    dp: Dispatcher = Dispatcher(storage=storage)
-
     dp.include_router(user_handlers.router)
     dp.include_router(other_handlers.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
 
-    postgres_url = URL.create(
-        'postgresql+asyncpg',
-        username=config2.database.pg_user,
-        password=config2.database.pg_password,
-        database=config2.database.pg_db_name,
-        host='localhost',
-        port='5432'
-    )
-
-    async_engine = create_async_engine(postgres_url)
-    session_maker = get_session_maker(async_engine)
     await proceed_schemas(async_engine, BaseModel.metadata)
 
     await dp.start_polling(bot, session_maker=session_maker)
