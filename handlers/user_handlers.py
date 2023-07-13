@@ -5,9 +5,9 @@ from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 
 from lexicon.user_lexicon import USER_LEXICON, DUES_LEXICON
-from states.user_states import Verification
+from states.user_states import Verification, InputDues
 from keyboards.reply_user import menu_kb, phone_num_kb
-from db.users import add_user_id, add_name, add_city, read_name
+from db.users import add_user_id, add_name, add_city, read_name, add_donations, read_donations, add_status_member
 from keyboards.inline_user import dueses_kb, send_kb
 
 # Инициализировал роутер для данного модуля
@@ -92,17 +92,63 @@ async def choice_of_dues(message: Message):
                          reply_markup=dueses_kb)
 
 
+# Этот хэндлер будет срабатывать на Callback
+# с data 'dues_but_pressed'
 @router.callback_query(Text(text=['dues_but_pressed']))
 async def dues_1_press(callback: CallbackQuery):
     await callback.message.answer(text='Название\n\nОписание',
                                   reply_markup=send_kb)
 
 
-@router.callback_query(Text(text=['send_dues_but_pressed']))
-async def send_dues_press(callback: CallbackQuery):
+# Этот хэндлер будет срабатывать на Callback
+# с data 'send_dues_but_pressed'
+@router.callback_query(Text(text=['send_dues_but_pressed']),
+                       StateFilter(default_state))
+async def send_dues_press(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text=DUES_LEXICON['input_dues'])
+    await state.set_state(InputDues._sum)
 
 
+# Этот хэндлер срабатывает на введение суммы доната
+@router.message(StateFilter(InputDues._sum),
+                lambda x: x.text.isdigit() and int(x.text) > -1 and int(x.text) < 20000)
+async def input_sum(message: Message, state: FSMContext):
+    _user_id = message.from_user.id
+    donation = message.text
+    await add_donations(_user_id, int(donation))
+    all_donation = await read_donations(_user_id)
+    if all_donation[0] < 1000:
+        pass
+    elif 1000 <= all_donation[0] < 5000:
+        await add_status_member(_user_id, 'Лайт')
+    elif 5000 <= all_donation[0] < 100000:
+        await add_status_member(_user_id, 'Стандарт')
+    else:
+        await add_status_member(_user_id, 'Макс')
+    await state.update_data(_sum=message.text)
+    await message.answer(text=DUES_LEXICON['gratitude'])
+    await message.answer(text=USER_LEXICON['greetings'],
+                         reply_markup=menu_kb)
+    await state.clear()
+
+
+# Этот хэндлер срабатывает на ввведение доната, который
+# Больше 20к
+@router.message(StateFilter(InputDues._sum),
+                lambda x: x.text.isdigit() and int(x.text) >= 20000)
+async def input_sum_more_20k(message: Message):
+    await message.answer(text='Мы не приминимет суммы больше 20к')
+
+
+# Этот хэндлер срабатывает на введение некоректной суммы
+# Например, вместо цифры вводятся буквы
+@router.message(StateFilter(InputDues._sum))
+async def wrong_input_sum(message: Message):
+    await message.answer(text=DUES_LEXICON['incorrect_num'])
+
+
+# Этот хэндлер будет срабатывать на Callback
+# с data 'send_cancel_dues_but_pressed'
 @router.callback_query(Text(text=['send_cancel_dues_but_pressed']))
 async def send_cancel_dues_press(callback: CallbackQuery):
     await callback.message.edit_text(text=DUES_LEXICON['dueses_options'],
