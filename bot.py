@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage, Redis
 from config_data.config import Config, load_config
-from handlers import other_handlers, user_handlers
+from handlers import new_user_handlers, other_handlers
 from db import BaseModel, proceed_schemas
 from loader import session_maker, async_engine
 
@@ -42,7 +42,7 @@ async def main():
                    parse_mode='HTML')
     dp: Dispatcher = Dispatcher(storage=storage)
 
-    dp.include_router(user_handlers.router)
+    dp.include_router(new_user_handlers.router)
     dp.include_router(other_handlers.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
