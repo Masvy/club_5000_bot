@@ -8,5 +8,6 @@ class Verification(StatesGroup):
     city = State()
 
 
+# Создал класс для группы состояний
 class InputDues(StatesGroup):
     _sum = State()
