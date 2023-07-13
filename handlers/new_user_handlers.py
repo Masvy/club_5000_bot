@@ -8,10 +8,14 @@ from lexicon.user_lexicon import USER_LEXICON, DUES_LEXICON
 from states.user_states import Verification, InputDues
 from keyboards.reply_user import menu_kb, phone_num_kb
 from db.users import add_user_id, add_name, add_city, read_name, add_donations, read_donations, add_status_member
-from keyboards.inline_user import dueses_kb, send_kb
+from keyboards.inline_user import dueses_kb, send_kb, okay_kb
 
 # Инициализировал роутер для данного модуля
 router: Router = Router()
+
+file_id = [
+    'AgACAgIAAxkDAAIElGSv9ME7laADL8wTKuQFqrSZShhHAALSyTEbTmBgSWiUvIVKpFmsAQADAgADeAADLwQ'
+]
 
 
 # Этот хэндлер отвечает на команду /start
@@ -51,28 +55,32 @@ async def process_name_sent(message: Message, state: FSMContext):
 # И выключает FSM
 @router.message(StateFilter(Verification.city))
 async def process_city_sent(message: Message, state: FSMContext):
-    photo = FSInputFile('photo/badge_5000_social.jpg')
     _user_id = message.from_user.id
     city_name = message.text
-    name_user = await read_name(_user_id)
     await state.update_data(city=message.text)
     await add_city(_user_id, city_name)
-    await message.answer(text=USER_LEXICON['FSM_finish'])
-    await message.answer_photo(photo=photo,
-                               caption=f"Привет, {name_user[0]}"
-                               f"\n\n{USER_LEXICON['greetings']}",
-                               reply_markup=menu_kb)
+    await message.answer(text=USER_LEXICON['FSM_finish'], reply_markup=okay_kb)
     await state.clear()
+
+
+# Этот хэндлер будет срабатывать на Callback
+# с data 'okay_but_pressed'
+@router.callback_query(Text(text='okay_but_pressed'))
+async def show_menu(callback: CallbackQuery):
+    name_user = await read_name(callback.from_user.id)
+    await callback.message.answer_photo(photo=file_id[0],
+                                        caption=f"Привет, {name_user[0]}"
+                                        f"\n\n{USER_LEXICON['greetings']}",
+                                        reply_markup=menu_kb)
 
 
 # Этот хэндлер отвечает на нажатие кнопки 'Правила'
 @router.message(Text(text='Правила'))
 async def show_rules(message: Message):
-    photo = FSInputFile('photo/badge_5000_social.jpg')
     _user_id = message.from_user.id
     name_user = await read_name(_user_id)
     await message.answer(text=USER_LEXICON['rules'])
-    await message.answer_photo(photo=photo,
+    await message.answer_photo(photo=file_id[0],
                                caption=f"Привет, {name_user[0]}"
                                f"\n\n{USER_LEXICON['greetings']}")
 
@@ -115,6 +123,7 @@ async def send_dues_press(callback: CallbackQuery, state: FSMContext):
 async def input_sum(message: Message, state: FSMContext):
     _user_id = message.from_user.id
     donation = message.text
+    name_user = await read_name(message.from_user.id)
     await add_donations(_user_id, int(donation))
     all_donation = await read_donations(_user_id)
     if all_donation[0] < 1000:
@@ -127,8 +136,10 @@ async def input_sum(message: Message, state: FSMContext):
         await add_status_member(_user_id, 'Макс')
     await state.update_data(_sum=message.text)
     await message.answer(text=DUES_LEXICON['gratitude'])
-    await message.answer(text=USER_LEXICON['greetings'],
-                         reply_markup=menu_kb)
+    await message.answer_photo(photo=file_id[0],
+                               caption=f"Привет, {name_user[0]}"
+                               f"\n\n{USER_LEXICON['greetings']}",
+                               reply_markup=menu_kb)
     await state.clear()
 
 
