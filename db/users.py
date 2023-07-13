@@ -45,11 +45,11 @@ async def add_city(_user_id, city):
             await session.execute(update(User).where(User.user_id == _user_id).values(city=city))
 
 
-async def add_donations(_user_id, danation):
+async def add_donations(_user_id, donation):
     _session_maker: sessionmaker = session_maker
     async with _session_maker() as session:
         async with session.begin():
-            await session.execute(update(User).where(User.user_id == _user_id).values(donations=danation))
+            await session.execute(update(User).where(User.user_id == _user_id).values(donations=User.donations+donation))
 
 
 async def add_status_member(_user_id, _status_member):
