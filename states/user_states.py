@@ -6,3 +6,7 @@ class Verification(StatesGroup):
     number = State()
     name = State()
     city = State()
+
+
+class InputDues(StatesGroup):
+    _sum = State()
