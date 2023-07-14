@@ -1,1 +1,1 @@
-from handlers import new_user_handlers, other_handlers
+from handlers import new_user_handlers, other_handlers, member_handlers

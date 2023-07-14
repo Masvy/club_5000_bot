@@ -1,14 +1,15 @@
 from aiogram import Router
 from aiogram.filters import CommandStart, StateFilter, Text
-from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 
 from lexicon.user_lexicon import USER_LEXICON, DUES_LEXICON
 from states.user_states import Verification, InputDues
 from keyboards.reply_user import menu_kb, phone_num_kb
-from db.users import add_user_id, add_name, add_city, read_name, add_donations, read_donations, add_status_member
+from db.users import add_user_id, add_name, add_city, read_name, add_donations, read_donations, add_status_member, read_status_member
 from keyboards.inline_user import dueses_kb, send_kb, okay_kb
+from filters.member_filters import IsStatus
 
 # Инициализировал роутер для данного модуля
 router: Router = Router()
@@ -16,6 +17,8 @@ router: Router = Router()
 file_id = [
     'AgACAgIAAxkDAAIElGSv9ME7laADL8wTKuQFqrSZShhHAALSyTEbTmBgSWiUvIVKpFmsAQADAgADeAADLwQ'
 ]
+
+status_member_list: list[str] = ['Лайт', 'Стандарт', 'Макс']
 
 
 # Этот хэндлер отвечает на команду /start
@@ -65,11 +68,11 @@ async def process_city_sent(message: Message, state: FSMContext):
 
 # Этот хэндлер будет срабатывать на Callback
 # с data 'okay_but_pressed'
-@router.callback_query(Text(text='okay_but_pressed'))
+@router.callback_query(Text(text='okay_but_pressed'), ~IsStatus(status_member_list))
 async def show_menu(callback: CallbackQuery):
     name_user = await read_name(callback.from_user.id)
     await callback.message.answer_photo(photo=file_id[0],
-                                        caption=f"Привет, {name_user[0]}"
+                                        caption=f"Привет, {name_user}"
                                         f"\n\n{USER_LEXICON['greetings']}",
                                         reply_markup=menu_kb)
 
@@ -78,11 +81,10 @@ async def show_menu(callback: CallbackQuery):
 @router.message(Text(text='Правила'))
 async def show_rules(message: Message):
     _user_id = message.from_user.id
-    name_user = await read_name(_user_id)
-    await message.answer(text=USER_LEXICON['rules'])
-    await message.answer_photo(photo=file_id[0],
-                               caption=f"Привет, {name_user[0]}"
-                               f"\n\n{USER_LEXICON['greetings']}")
+    res = await read_status_member(_user_id)
+    await message.answer(text=USER_LEXICON['rules'],
+                         reply_markup=okay_kb)
+    print(res)
 
 
 # Этот хэндлер отвечает на нажатие кнопки 'Вступить'
@@ -137,7 +139,7 @@ async def input_sum(message: Message, state: FSMContext):
     await state.update_data(_sum=message.text)
     await message.answer(text=DUES_LEXICON['gratitude'])
     await message.answer_photo(photo=file_id[0],
-                               caption=f"Привет, {name_user[0]}"
+                               caption=f"Привет, {name_user}"
                                f"\n\n{USER_LEXICON['greetings']}",
                                reply_markup=menu_kb)
     await state.clear()
