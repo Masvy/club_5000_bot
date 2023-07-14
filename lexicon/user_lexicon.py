@@ -34,7 +34,6 @@ USER_LEXICON: dict[str: str] = {
 
 MENU_USER_LEXICON: dict[str: str] = {
     'rules_but': 'Правила',
-    'status_but': 'Статус',
     'join_but': 'Вступить',
     'dues_but': 'Сборы'
 }

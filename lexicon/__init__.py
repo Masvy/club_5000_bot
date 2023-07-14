@@ -1,1 +1,1 @@
-from lexicon import user_lexicon
+from lexicon import user_lexicon, member_lexicon
