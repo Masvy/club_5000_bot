@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage, Redis
 from config_data.config import Config, load_config
-from handlers import new_user_handlers, other_handlers
+from handlers import new_user_handlers, other_handlers, member_handlers
 from db import BaseModel, proceed_schemas
 from loader import session_maker, async_engine
 
@@ -43,6 +43,7 @@ async def main():
     dp: Dispatcher = Dispatcher(storage=storage)
 
     dp.include_router(new_user_handlers.router)
+    dp.include_router(member_handlers.router)
     dp.include_router(other_handlers.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
@@ -50,6 +51,7 @@ async def main():
     await proceed_schemas(async_engine, BaseModel.metadata)
 
     await dp.start_polling(bot, session_maker=session_maker)
+
 
 if __name__ == '__main__':
     asyncio.run(main())
