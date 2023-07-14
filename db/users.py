@@ -64,7 +64,7 @@ async def read_name(_user_id):
     async with _session_maker() as session:
         async with session.begin():
             result = await session.execute(select(User.name).where(User.user_id == _user_id))
-            name = result.one()
+            name = result.scalar()
     return name
 
 
@@ -73,7 +73,7 @@ async def read_donations(_user_id):
     async with _session_maker() as session:
         async with session.begin():
             result = await session.execute(select(User.donations).where(User.user_id == _user_id))
-            donations = result.one()
+            donations = result.scalar()
     return donations
 
 
@@ -82,5 +82,5 @@ async def read_status_member(_user_id):
     async with _session_maker() as session:
         async with session.begin():
             result = await session.execute(select(User.status_member).where(User.user_id == _user_id))
-            status_memeber = result.one()
+            status_memeber = result.scalar()
     return status_memeber
