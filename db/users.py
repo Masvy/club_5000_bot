@@ -18,7 +18,10 @@ class User(BaseModel):
     donations = Column(Integer, unique=False, default=0)
 
     status_member = Column(VARCHAR(30), unique=False, nullable=True,
-                           default='Новый пользователь')
+                           default='Вне клуба')
+
+    registration_status = Column(VARCHAR(20), unique=False,
+                                 default='Не зарегистрирован')
 
     def __str__(self) -> str:
         return f'User: {self.user_id}'
@@ -59,6 +62,13 @@ async def add_status_member(_user_id, _status_member):
             await session.execute(update(User).where(User.user_id == _user_id).values(status_member=_status_member))
 
 
+async def add_registration_status(_user_id, _registration_status):
+    _session_maker: sessionmaker = session_maker
+    async with _session_maker() as session:
+        async with session.begin():
+            await session.execute(update(User).where(User.user_id == _user_id).values(registration_status=_registration_status))
+
+
 async def read_name(_user_id):
     _session_maker: sessionmaker = session_maker
     async with _session_maker() as session:
@@ -84,3 +94,12 @@ async def read_status_member(_user_id):
             result = await session.execute(select(User.status_member).where(User.user_id == _user_id))
             status_memeber = result.scalar()
     return status_memeber
+
+
+async def read_registration_status(_user_id):
+    _session_maker: sessionmaker = session_maker
+    async with _session_maker() as session:
+        async with session.begin():
+            result = await session.execute(select(User.registration_status).where(User.user_id == _user_id))
+            registration_status = result.scalar()
+    return registration_status
