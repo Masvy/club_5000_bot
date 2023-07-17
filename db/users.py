@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR
+from sqlalchemy import Column, Integer, VARCHAR, BigInteger
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import insert, update, select
 
@@ -9,7 +9,7 @@ from loader import session_maker
 class User(BaseModel):
     __tablename__ = 'users'
 
-    user_id = Column(Integer, unique=True, nullable=False, primary_key=True)
+    user_id = Column(BigInteger, unique=True, nullable=False, primary_key=True)
 
     name = Column(VARCHAR(50), unique=False, nullable=True)
 
@@ -17,8 +17,7 @@ class User(BaseModel):
 
     donations = Column(Integer, unique=False, default=0)
 
-    status_member = Column(VARCHAR(30), unique=False, nullable=True,
-                           default='Вне клуба')
+    status_member = Column(VARCHAR(30), unique=False, default='Вне клуба')
 
     registration_status = Column(VARCHAR(20), unique=False,
                                  default='Не зарегистрирован')
@@ -103,3 +102,12 @@ async def read_registration_status(_user_id):
             result = await session.execute(select(User.registration_status).where(User.user_id == _user_id))
             registration_status = result.scalar()
     return registration_status
+
+
+async def read_user_id(_user_id):
+    _session_maker: sessionmaker = session_maker
+    async with _session_maker() as session:
+        async with session.begin():
+            result = await session.execute(select(User.user_id).where(User.user_id == _user_id))
+            _user_id_db = result.scalar()
+    return _user_id_db
