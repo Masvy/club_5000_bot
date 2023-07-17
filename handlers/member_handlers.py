@@ -19,7 +19,9 @@ file_id = [
 
 status_member_list: list[str] = ['Без статуса', 'Лайт', 'Стандарт', 'Макс']
 
-router.message.filter(IsStatus(status_member_list))
+admin = ['Админ']
+
+router.message.filter(IsStatus(status_member_list), ~IsStatus(admin))
 
 
 # Этот хэндлер будет срабатывать на Callback

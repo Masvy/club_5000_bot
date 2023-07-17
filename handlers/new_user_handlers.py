@@ -7,7 +7,9 @@ from aiogram.fsm.context import FSMContext
 from lexicon.user_lexicon import USER_LEXICON, DUES_LEXICON
 from states.user_states import Verification, InputDues
 from keyboards.reply_user import menu_kb, phone_num_kb
-from db.users import add_user_id, add_name, add_city, read_name, add_donations, read_donations, add_status_member, add_registration_status
+from db.users import add_user_id, add_name, add_city, read_name, add_donations
+from db.users import read_donations, add_status_member
+from db.users import add_registration_status, read_user_id
 from keyboards.inline_user import dueses_kb, send_kb, okay_kb
 from filters.member_filters import IsStatus
 
@@ -15,25 +17,26 @@ from filters.member_filters import IsStatus
 router: Router = Router()
 
 file_id = [
-    'AgACAgIAAxkDAAIElGSv9ME7laADL8wTKuQFqrSZShhHAALSyTEbTmBgSWiUvIVKpFmsAQADAgADeAADLwQ'
+    'AgACAgIAAxkDAAIElGSv9ME7laADL8wTKuQFqr'
+    'SZShhHAALSyTEbTmBgSWiUvIVKpFmsAQADAgADeAADLwQ'
 ]
 
-status_member_list: list[str] = ['Без статуса', 'Лайт', 'Стандарт', 'Макс']
+status_member_list: list[str] = ['Без статуса', 'Лайт',
+                                 'Стандарт', 'Макс', 'Админ']
+
+
+admins_ids: list[str] = ['707637895']
 
 
 # Этот хэндлер отвечает на команду /start
 # И переводить бота в состояние ожидания получения номера
 @router.message(CommandStart(), StateFilter(default_state))
 async def start_user_bot(message: Message, state: FSMContext):
-    try:
-        _user_id = message.from_user.id
-        await add_user_id(_user_id)
-        await message.answer(text=USER_LEXICON['/start'],
-                             reply_markup=phone_num_kb)
-        await state.set_state(Verification.number)
-    except Exception:
-        await message.answer('Ты уже зарегистрирован',
-                             reply_markup=menu_kb)
+    _user_id = message.from_user.id
+    await add_user_id(_user_id)
+    await message.answer(text=USER_LEXICON['/start'],
+                         reply_markup=phone_num_kb)
+    await state.set_state(Verification.number)
 
 
 # Этот эндлер отлавливает номер
@@ -53,7 +56,6 @@ async def process_name_sent(message: Message, state: FSMContext):
     _user_id = message.from_user.id
     name = message.text
     await add_name(_user_id, name)
-    await add_registration_status(_user_id, 'Зарегистрирован')
     await state.update_data(name=message.text)
     await message.answer(text=USER_LEXICON['input_city'])
     await state.set_state(Verification.city)
@@ -65,15 +67,23 @@ async def process_name_sent(message: Message, state: FSMContext):
 async def process_city_sent(message: Message, state: FSMContext):
     _user_id = message.from_user.id
     city_name = message.text
+    user_id_db = await read_user_id(message.from_user.id)
     await state.update_data(city=message.text)
+    await add_registration_status(_user_id, 'Зарегистрирован')
     await add_city(_user_id, city_name)
-    await message.answer(text=USER_LEXICON['FSM_finish'], reply_markup=okay_kb)
+    if str(user_id_db) in admins_ids:
+        await add_status_member(message.from_user.id, 'Админ')
+    else:
+        pass
+    await message.answer(text=USER_LEXICON['FSM_finish'],
+                         reply_markup=okay_kb)
     await state.clear()
 
 
 # Этот хэндлер будет срабатывать на Callback
 # с data 'okay_but_pressed'
-@router.callback_query(Text(text='okay_but_pressed'), ~IsStatus(status_member_list))
+@router.callback_query(Text(text='okay_but_pressed'),
+                       ~IsStatus(status_member_list))
 async def show_menu(callback: CallbackQuery):
     name_user = await read_name(callback.from_user.id)
     await callback.message.answer_photo(photo=file_id[0],
@@ -123,7 +133,8 @@ async def send_dues_press(callback: CallbackQuery, state: FSMContext):
 
 # Этот хэндлер срабатывает на введение суммы доната
 @router.message(StateFilter(InputDues._sum),
-                lambda x: x.text.isdigit() and int(x.text) > -1 and int(x.text) < 20000)
+                lambda x: x.text.isdigit() and int(x.text) > -1 and
+                int(x.text) < 20000)
 async def input_sum(message: Message, state: FSMContext):
     donation = message.text
     await add_donations(message.from_user.id, int(donation))
