@@ -43,9 +43,9 @@ async def main():
                    parse_mode='HTML')
     dp: Dispatcher = Dispatcher(storage=storage)
 
+    dp.include_router(admin_handlers.router)
     dp.include_router(new_user_handlers.router)
     dp.include_router(member_handlers.router)
-    dp.include_router(admin_handlers.router)
     dp.include_router(other_handlers.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
