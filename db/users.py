@@ -22,6 +22,9 @@ class User(BaseModel):
     registration_status = Column(VARCHAR(20), unique=False,
                                  default='Не зарегистрирован')
 
+    block_status = Column(VARCHAR(25), unique=False,
+                          default='Не заблокирован')
+
     def __str__(self) -> str:
         return f'User: {self.user_id}'
 
@@ -66,6 +69,13 @@ async def add_registration_status(_user_id, _registration_status):
     async with _session_maker() as session:
         async with session.begin():
             await session.execute(update(User).where(User.user_id == _user_id).values(registration_status=_registration_status))
+
+
+async def add_block_status(_user_id, _block_status):
+    _session_maker: sessionmaker = session_maker
+    async with _session_maker() as session:
+        async with session.begin():
+            await session.execute(update(User).where(User.user_id == _user_id).values(block_status=_block_status))
 
 
 async def read_name(_user_id):
