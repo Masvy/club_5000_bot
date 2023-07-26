@@ -25,7 +25,7 @@ statistics_but: InlineKeyboardButton = InlineKeyboardButton(
     callback_data='statistics_but_pressed'
 )
 dues_manage_but: InlineKeyboardButton = InlineKeyboardButton(
-    text=MENU_ADMIN['dues_manag_but'],
+    text=MENU_ADMIN['dues_manage_but'],
     callback_data='dues_manage_but_pressed'
 )
 users_manage_but: InlineKeyboardButton = InlineKeyboardButton(
@@ -56,6 +56,14 @@ come_back_in_manage_user_but: InlineKeyboardButton = InlineKeyboardButton(
     text=MENU_ADMIN['come_back'],
     callback_data='come_back_in_manage_user_but_pressed'
 )
+create_dues: InlineKeyboardButton = InlineKeyboardButton(
+    text=MENU_ADMIN_PANEL['create_dues'],
+    callback_data='create_dues_pressed'
+)
+select_dues: InlineKeyboardButton = InlineKeyboardButton(
+    text=MENU_ADMIN_PANEL['select_dues'],
+    callback_data='select_dues_pressed'
+)
 
 admin_menu_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[[menu_rules, menu_dues],
@@ -68,4 +76,7 @@ admin_panel_menu_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
 user_manage_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[[block_user_but, mute_user_but],
                      [give_level_max_but, come_back_in_manage_user_but]]
+)
+dues_manage_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=[[create_dues, select_dues]]
 )
