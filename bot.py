@@ -3,11 +3,13 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage, Redis
+
 from config_data.config import Config, load_config
 from handlers import new_user_handlers, other_handlers
 from handlers import member_handlers, admin_handlers
 from db import BaseModel, proceed_schemas
 from loader import session_maker, async_engine
+from middlewares.block_check import BlockCheck
 
 # Инициализировал логгер
 logger = logging.getLogger(__name__)
@@ -42,6 +44,9 @@ async def main():
     bot: Bot = Bot(token=config.tg_bot.token,
                    parse_mode='HTML')
     dp: Dispatcher = Dispatcher(storage=storage)
+
+    dp.message.middleware(BlockCheck())
+    dp.callback_query.middleware(BlockCheck())
 
     dp.include_router(admin_handlers.router)
     dp.include_router(new_user_handlers.router)
